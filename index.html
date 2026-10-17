@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How a Rainbow Is Made</title>
+<meta name="description" content="An interactive explanation of how rainbows form: what one raindrop does, and what happens when there are many.">
+<style>
+:root{--bg:#0b1226;--panel:#131c3a;--panel2:#18234a;--ink:#eef2ff;--muted:#a5b0d6;--accent:#ffd36b;--line:#2a3763;--good:#7ee2a8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:940px;margin:0 auto;padding:0 16px 60px}
+.hero{padding:44px 0 18px;text-align:center}
+.hero h1{font-size:clamp(30px,6vw,52px);margin:0 0 10px;line-height:1.1;
+  background:linear-gradient(90deg,#ff4d4d,#ff9a2e,#ffe24a,#45e070,#35b8ff,#6a6cff,#b04dff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--muted);max-width:640px;margin:0 auto 16px;font-size:19px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 18px;margin:22px 0}
+.card h2{margin:0 0 8px;font-size:23px;display:flex;gap:10px;align-items:center}
+.num{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#1b1500;font-weight:700;font-size:18px;flex:none}
+.card p{margin:8px 0}
+.stage{margin:12px 0 4px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#0d1530}
+canvas{display:block;width:100%;touch-action:pan-y;cursor:crosshair}
+.controls{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;margin:12px 0 4px}
+.controls label{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:15px}
+input[type=range]{width:220px;max-width:100%;accent-color:var(--accent)}
+.val{color:var(--ink);font-variant-numeric:tabular-nums;min-width:3.2em}
+button,.seg button{font:inherit;font-size:15px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)}
+.seg{display:inline-flex;gap:0}
+.seg button{border-radius:0}.seg button:first-child{border-radius:999px 0 0 999px}.seg button:last-child{border-radius:0 999px 999px 0}
+.seg button[aria-pressed=true]{background:var(--accent);color:#1b1500;border-color:var(--accent)}
+.readout{background:var(--panel2);border-radius:10px;padding:10px 14px;margin-top:10px;color:#dfe6ff;font-size:16px;min-height:3.2em}
+.readout b{color:var(--accent)}
+.swatch{display:inline-block;width:26px;height:26px;border-radius:50%;vertical-align:middle;margin-right:8px;border:2px solid #fff3}
+.hint{color:var(--muted);font-size:14px}
+.stretch{display:inline-flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:15px;color:var(--muted);text-align:left}
+.answer ul{padding-left:20px}.answer li{margin:8px 0}
+.answer .big{font-size:20px;color:var(--good)}
+footer{text-align:center;color:var(--muted);font-size:14px;margin-top:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>🌈 How is a rainbow made?</h1>
+  <p class="lead">Does <b>one</b> raindrop make the whole rainbow? Or is it made by <b>lots</b> of raindrops working together? Let's play with the light and find out.</p>
+  <label class="stretch"><input type="checkbox" id="spread" checked>
+    <span>Stretch the colors so they're easier to see <small>(a real rainbow is about 1.5° wide; we stretch it to ~8°)</small></span></label>
+</header>
+
+<section class="card">
+  <h2><span class="num">1</span> Follow light through ONE raindrop</h2>
+  <p>Sunlight looks white, but it's secretly made of all the colors. When a ray hits a raindrop it <b>bends</b> going in (①), <b>bounces</b> off the back wall (②), and <b>bends</b> again coming out (③). It comes out heading mostly <i>back</i> toward the sun.</p>
+  <div class="stage"><canvas id="c1"></canvas></div>
+  <div class="stage"><canvas id="c1g"></canvas></div>
+  <div class="controls">
+    <span class="seg"><button id="m-ray" aria-pressed="true">One ray</button><button id="m-beam" aria-pressed="false">Whole sunbeam</button></span>
+    <label><input type="checkbox" id="colors" checked> Split into colors</label>
+    <label>Where it hits <input type="range" id="bsl" min="0" max="99" value="86"></label>
+    <button id="rbray">Show me the "rainbow ray"</button>
+  </div>
+  <div class="readout" id="r1"></div>
+  <p class="hint">Tip: click or drag on the drop to move the ray. The graph shows the leaving angle for every place a ray can hit.</p>
+</section>
+
+<section class="card">
+  <h2><span class="num">2</span> One drop, many directions, ONE color for you</h2>
+  <p>Every color leaves the drop at a slightly different angle: red a little wider, violet a little narrower. So a single drop sends <b>all</b> the colors out, but <b>in different directions</b>. Where you stand decides which one reaches your eye. Move the eye around the drop!</p>
+  <div class="stage"><canvas id="c2"></canvas></div>
+  <div class="controls">
+    <label>Eye position <input type="range" id="asl" min="34" max="52" step="0.1" value="41"> <span class="val" id="aval"></span></label>
+    <button id="sweep">▶ Sweep</button>
+  </div>
+  <div class="readout" id="r2"></div>
+</section>
+
+<section class="card">
+  <h2><span class="num">3</span> Now add lots of drops</h2>
+  <p>You're standing with the sun behind you, looking at falling rain. Each drop sends you just <b>one</b> color, and only if it sits at exactly the right angle from the point your shadow's head points to. Add drops and watch.</p>
+  <div class="stage"><canvas id="c3"></canvas></div>
+  <div class="controls">
+    <label>Raindrops <input type="range" id="nsl" min="0" max="100" value="57"> <span class="val" id="nval"></span></label>
+    <label>Sun height <input type="range" id="ssl" min="0" max="60" value="20"> <span class="val" id="sval"></span></label>
+  </div>
+  <div class="controls">
+    <label><input type="checkbox" id="rain"> Make it rain</label>
+    <label><input type="checkbox" id="hide"> Hide drops that send you nothing</label>
+    <label><input type="checkbox" id="ring"> Show the ring</label>
+  </div>
+  <div class="readout" id="r3"></div>
+  <p class="hint">Click or drag in the sky to move the white-ringed drop and see what it sends you.</p>
+  <h3 style="margin:18px 0 4px;font-size:18px">Same thing from the side</h3>
+  <div class="stage"><canvas id="c4"></canvas></div>
+  <p class="hint">A slice of sky straight in front of you. Drops inside the colored wedge send color to your eye; drops outside it send you nothing.</p>
+</section>
+
+<section class="card answer">
+  <h2><span class="num">4</span> So why not lots of little rainbows?</h2>
+  <ul>
+    <li><span class="big">One drop does NOT make a whole rainbow.</span> It sends all its colors out, but each color goes a different way. You only catch one color from it.</li>
+    <li>The color you catch depends on the <b>angle</b>: about 42° from your shadow's direction is <b style="color:#ff6b6b">red</b>, about 40° is <b style="color:#b27bff">violet</b>, and the colors fall in between.</li>
+    <li>All drops at the same angle send you the same color, so they line up on a <b>circle</b> around the point your shadow points to. Red ring on the outside, violet inside, the rest in between. That's the rainbow.</li>
+    <li>A drop in front of or behind another one at the same angle doesn't make a second rainbow. It adds to the <b>same ring</b>, and the rainbow gets brighter.</li>
+    <li>That's why a rainbow isn't a thing in one place. It's a pattern of angles. You can never walk up to it, it moves when you move, and your friend standing next to you is looking at a slightly different rainbow made by <i>different</i> drops.</li>
+    <li>Try the sun-height slider: when the sun is higher than about 42°, the ring is below the horizon and you can't see it from the ground.</li>
+    <li><b>Bonus:</b> a faint second rainbow appears when light bounces <i>twice</i> inside a drop. It comes out at about 51°, with the colors upside down.</li>
+  </ul>
+</section>
+
+<footer>Made with curiosity 🌦 · Physics: one internal reflection, Snell's law, water n ≈ 1.33</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const D2R=Math.PI/180;
+let SPREAD=5;
+
+/* ---------- physics ---------- */
+const N_MID=1.3376,N_SPAN=0.0118;               // red≈1.3317 … violet≈1.3435
+const nOf=t=>N_MID+(t-0.5)*N_SPAN*SPREAD;       // t=0 red … 1 violet
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1];
+function refract(d,nrm,eta){                    // nrm faces against d
+  const c=-dot(d,nrm),k=1-eta*eta*(1-c*c),s=eta*c-Math.sqrt(k);
+  return [eta*d[0]+s*nrm[0],eta*d[1]+s*nrm[1]];
+}
+function trace(b,n){                            // unit drop, light travels +x, y up
+  const P1=[-Math.sqrt(1-b*b),b],d0=[1,0];
+  const d1=refract(d0,P1,1/n);
+  let t=-2*dot(P1,d1);
+  const P2=[P1[0]+t*d1[0],P1[1]+t*d1[1]];
+  const k=2*dot(d1,P2),d2=[d1[0]-k*P2[0],d1[1]-k*P2[1]];
+  t=-2*dot(P2,d2);
+  const P3=[P2[0]+t*d2[0],P2[1]+t*d2[1]];
+  const d3=refract(d2,[-P3[0],-P3[1]],n);
+  return {P1,P2,P3,d1,d2,d3};
+}
+const theta=(b,n)=>(4*Math.asin(b/n)-2*Math.asin(b))/D2R;   // angle away from straight-back
+function critB(n){return Math.sqrt(1-(n*n-1)/3);}          // sin(i) at the rainbow ray
+const thetaMax=n=>theta(critB(n),n);
+const aR=()=>thetaMax(nOf(0)),aV=()=>thetaMax(nOf(1));
+
+/* ---------- color ---------- */
+const STOPS=[[0,[255,45,45]],[1/6,[255,138,31]],[2/6,[255,226,31]],[3/6,[47,224,90]],[4/6,[38,182,255]],[5/6,[59,75,255]],[1,[155,59,255]]];
+function col(t){t=Math.max(0,Math.min(1,t));
+  for(let k=1;k<STOPS.length;k++)if(t<=STOPS[k][0]){const[t0,c0]=STOPS[k-1],[t1,c1]=STOPS[k],u=(t-t0)/(t1-t0);return c0.map((v,j)=>Math.round(v+(c1[j]-v)*u));}
+  return STOPS[6][1];}
+const rgba=(c,a)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const NAMES=['Red','Orange','Yellow','Green','Blue','Indigo','Violet'];
+const nameOf=t=>NAMES[Math.min(6,Math.floor(t*7))];
+const STYLE=[];for(let k=0;k<64;k++)STYLE.push(rgba(col(k/63),0.85));
+/* what color does an eye at angle a (degrees) get from one drop? */
+function seen(a){
+  const R=aR(),V=aV(),soft=0.25;
+  if(a>=V&&a<=R){const t=(R-a)/(R-V);return{c:col(t),i:1,name:nameOf(t),t};}
+  if(a>R){const i=Math.max(0,1-(a-R)/soft);return{c:col(0),i,name:i>0.05?'Red':null,t:0};}
+  const u=Math.min(1,(V-a)/soft),v=col(1);
+  return{c:v.map((x,j)=>Math.round(x+(255-x)*u)),i:0.22+0.78*(1-u),name:u>0.9?'pale':'Violet',t:1};
+}
+
+/* ---------- canvas plumbing ---------- */
+function setup(cv,aspect,maxH){
+  const w=cv.parentElement.clientWidth,h=Math.min(maxH,Math.round(w*aspect)),dpr=window.devicePixelRatio||1;
+  cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,w,h};
+}
+function bindPointer(cv,fn){
+  let down=false;
+  const pos=e=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];};
+  cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){down=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}fn(...pos(e));}});
+  cv.addEventListener('pointermove',e=>{if(down)fn(...pos(e));});
+  cv.addEventListener('pointerup',()=>{down=false;});
+  cv.addEventListener('pointercancel',()=>{down=false;});
+  cv.addEventListener('click',e=>fn(...pos(e)));
+}
+function dropFill(ctx,cx,cy,R){
+  const g=ctx.createRadialGradient(cx-R*.3,cy-R*.3,R*.1,cx,cy,R);
+  g.addColorStop(0,'rgba(140,190,255,.30)');g.addColorStop(1,'rgba(80,130,230,.12)');
+  ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.fillStyle=g;ctx.fill();
+  ctx.lineWidth=2;ctx.strokeStyle='rgba(170,205,255,.85)';ctx.stroke();
+}
+function badge(ctx,x,y,txt){
+  ctx.beginPath();ctx.arc(x,y,10,0,7);ctx.fillStyle='#ffd36b';ctx.fill();
+  ctx.fillStyle='#1b1500';ctx.font='bold 13px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,x,y+1);
+}
+function arrowHead(ctx,x,y,ang,s){
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-s*Math.cos(ang-.45),y-s*Math.sin(ang-.45));ctx.lineTo(x-s*Math.cos(ang+.45),y-s*Math.sin(ang+.45));ctx.closePath();ctx.fill();
+}
+
+let V1,V1g,V2,V3,V4;
+
+/* =====================================================
+   Section 1 — one drop
+   ===================================================== */
+const s1={b:0.86,mode:'ray',colors:true};
+function draw1(){
+  const{ctx,w,h}=V1;
+  ctx.fillStyle='#0d1530';ctx.fillRect(0,0,w,h);
+  const R=Math.min(h*0.4,w*0.22),cx=w*0.55,cy=h*0.5;
+  const SX=x=>cx+x*R,SY=y=>cy-y*R;
+  ctx.fillStyle='#9fb0e6';ctx.font='15px system-ui';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.fillText('☀ Sunlight →',12,24);
+  dropFill(ctx,cx,cy,R);
+  ctx.setLineDash([4,6]);ctx.strokeStyle='rgba(255,255,255,.22)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(cx,cy);ctx.stroke();ctx.setLineDash([]);
+
+  const L=w*1.4;
+  function drawRay(b,n,color,aIn,aOut,lw,incoming){
+    const T=trace(b,n),p1=[SX(T.P1[0]),SY(T.P1[1])],p2=[SX(T.P2[0]),SY(T.P2[1])],p3=[SX(T.P3[0]),SY(T.P3[1])];
+    if(incoming){ctx.beginPath();ctx.moveTo(0,p1[1]);ctx.lineTo(p1[0],p1[1]);ctx.strokeStyle=rgba([255,255,255],aIn);ctx.lineWidth=lw;ctx.stroke();}
+    ctx.beginPath();ctx.moveTo(p1[0],p1[1]);ctx.lineTo(p2[0],p2[1]);ctx.lineTo(p3[0],p3[1]);ctx.lineTo(p3[0]+T.d3[0]*L,p3[1]-T.d3[1]*L);
+    ctx.strokeStyle=rgba(color,aOut);ctx.lineWidth=lw;ctx.stroke();
+    return{T,p1,p2,p3};
+  }
+  const tcs=s1.colors?[0,1/6,2/6,3/6,4/6,5/6,1]:[0.5];
+  const cols=tcs.map(t=>s1.colors?col(t):[255,255,255]);
+  if(s1.mode==='beam'){
+    ctx.globalCompositeOperation='lighter';
+    const K=49;
+    for(let k=0;k<K;k++){
+      const b=-0.985+k*(1.97/(K-1));
+      const sgn=b<0?-1:1,ab=Math.abs(b);
+      tcs.forEach((t,j)=>{
+        const T=trace(ab,nOf(t)),p1=[SX(T.P1[0]),SY(sgn*T.P1[1])],p2=[SX(T.P2[0]),SY(sgn*T.P2[1])],p3=[SX(T.P3[0]),SY(sgn*T.P3[1])];
+        if(j===0){ctx.beginPath();ctx.moveTo(0,p1[1]);ctx.lineTo(p1[0],p1[1]);ctx.strokeStyle='rgba(255,255,255,.22)';ctx.lineWidth=1;ctx.stroke();}
+        ctx.beginPath();ctx.moveTo(p1[0],p1[1]);ctx.lineTo(p2[0],p2[1]);ctx.lineTo(p3[0],p3[1]);
+        ctx.strokeStyle=rgba(cols[j],s1.colors?0.1:0.2);ctx.lineWidth=1;ctx.stroke();
+        ctx.beginPath();ctx.moveTo(p3[0],p3[1]);ctx.lineTo(p3[0]+T.d3[0]*L,p3[1]-sgn*T.d3[1]*L);
+        ctx.strokeStyle=rgba(cols[j],s1.colors?0.3:0.5);ctx.lineWidth=1.2;ctx.stroke();
+      });
+    }
+    ctx.globalCompositeOperation='source-over';
+  }else{
+    const b=s1.b;
+    ctx.globalCompositeOperation=s1.colors?'lighter':'source-over';
+    let first=null;
+    tcs.forEach((t,j)=>{const r=drawRay(b,nOf(t),cols[j],j===0?0.9:0,s1.colors?0.55:0.95,2.4,j===0);if(!first)first=r;});
+    ctx.globalCompositeOperation='source-over';
+    // numbered points + angle arc (for the first = red / white ray)
+    const{T,p1,p2,p3}=first;
+    badge(ctx,p1[0]-(p1[0]-cx)/R*16,p1[1]-(p1[1]-cy)/R*16,'1');
+    badge(ctx,p2[0]+(p2[0]-cx)/R*16,p2[1]+(p2[1]-cy)/R*16,'2');
+    badge(ctx,p3[0]+(p3[0]-cx)/R*16,p3[1]+(p3[1]-cy)/R*16,'3');
+    const a1=Math.atan2(-T.d3[1],T.d3[0]);
+    if(a1>0){
+      ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(p3[0],p3[1]);ctx.lineTo(p3[0]-90,p3[1]);ctx.stroke();ctx.setLineDash([]);
+      ctx.beginPath();ctx.arc(p3[0],p3[1],60,a1,Math.PI);ctx.strokeStyle='#ffd36b';ctx.lineWidth=2;ctx.stroke();
+      const am=(a1+Math.PI)/2;
+      ctx.fillStyle='#ffd36b';ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(theta(b,nOf(tcs[0])).toFixed(1)+'°',p3[0]+Math.cos(am)*80,p3[1]+Math.sin(am)*80);
+    }
+  }
+  r1();
+}
+function draw1g(){
+  const{ctx,w,h}=V1g;
+  ctx.fillStyle='#0d1530';ctx.fillRect(0,0,w,h);
+  const l=46,r=14,t=16,bt=36,X=b=>l+b*(w-l-r),Y=a=>h-bt-a/50*(h-bt-t);
+  ctx.font='12px system-ui';ctx.fillStyle='#8f9bc9';ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.textAlign='right';ctx.textBaseline='middle';
+  for(let a=0;a<=50;a+=10){ctx.beginPath();ctx.moveTo(l,Y(a));ctx.lineTo(w-r,Y(a));ctx.stroke();ctx.fillText(a+'°',l-6,Y(a));}
+  ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillText('Where the ray hits the drop:  middle  →  edge',(l+w-r)/2,h-8);
+  ctx.save();ctx.translate(12,(t+h-bt)/2);ctx.rotate(-Math.PI/2);ctx.fillText('Leaving angle',0,0);ctx.restore();
+  const tcs=s1.colors?[0,1/6,2/6,3/6,4/6,5/6,1]:[0.5];
+  tcs.forEach(tt=>{
+    const n=nOf(tt);ctx.beginPath();
+    for(let b=0;b<=0.995;b+=0.005){const x=X(b),y=Y(theta(b,n));b===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.strokeStyle=s1.colors?rgba(col(tt),0.9):'#fff';ctx.lineWidth=2;ctx.stroke();
+  });
+  // peak guide
+  const pk=aR();
+  ctx.setLineDash([5,5]);ctx.strokeStyle='rgba(255,211,107,.6)';ctx.beginPath();ctx.moveTo(l,Y(pk));ctx.lineTo(w-r,Y(pk));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#ffd36b';ctx.textAlign='left';ctx.fillText('biggest angle ≈ '+pk.toFixed(0)+'° — light piles up here',l+8,Y(pk)-7);
+  if(s1.mode==='beam'){
+    const K=49;
+    tcs.forEach(tt=>{const n=nOf(tt);
+      for(let k=0;k<K;k++){const b=Math.abs(-0.985+k*(1.97/(K-1)));
+        ctx.beginPath();ctx.arc(X(b),Y(theta(b,n)),2.2,0,7);ctx.fillStyle=s1.colors?rgba(col(tt),0.8):'rgba(255,255,255,.8)';ctx.fill();}
+    });
+  }else{
+    ctx.setLineDash([3,4]);ctx.strokeStyle='rgba(255,255,255,.4)';ctx.beginPath();ctx.moveTo(X(s1.b),t);ctx.lineTo(X(s1.b),h-bt);ctx.stroke();ctx.setLineDash([]);
+    tcs.forEach(tt=>{ctx.beginPath();ctx.arc(X(s1.b),Y(theta(s1.b,nOf(tt))),5,0,7);ctx.fillStyle=s1.colors?col(tt).length?rgba(col(tt),1):'#fff':'#fff';ctx.fill();ctx.strokeStyle='#0d1530';ctx.stroke();});
+  }
+}
+function r1(){
+  const R_=aR(),V_=aV(),mid=thetaMax(nOf(0.5));
+  let s;
+  if(s1.mode==='beam'){
+    s='Each ray hits a different spot, so each one leaves at a <b>different angle</b>. But look at the graph: near the top of the curve lots of rays leave at almost the same angle, so they <b>pile up</b> and make a bright glow around '+(s1.colors?'<b>'+V_.toFixed(1)+'°</b> (violet) to <b>'+R_.toFixed(1)+'°</b> (red)':'<b>'+mid.toFixed(1)+'°</b>')+'. <b>Nothing</b> leaves at a bigger angle.';
+  }else{
+    const th=theta(s1.b,nOf(s1.colors?0:0.5));
+    s='This ray leaves <b>'+th.toFixed(1)+'°</b> away from straight-back. ';
+    if(Math.abs(th-(s1.colors?R_:mid))<0.4)s+='That\'s the <b>rainbow ray</b>: the biggest angle any ray can make, where lots of nearby rays go the same way. ';
+    if(s1.colors)s+='Red leaves at '+theta(s1.b,nOf(0)).toFixed(1)+'°, violet at '+theta(s1.b,nOf(1)).toFixed(1)+'°: each color takes its own path.';
+    else s+='Turn on "Split into colors" to see the colors take different paths.';
+  }
+  $('#r1').innerHTML=s;
+}
+function setB(v){s1.b=Math.max(0,Math.min(0.995,v));$('#bsl').value=Math.round(s1.b*100);draw1();draw1g();}
+bindPointer($('#c1'),(x,y)=>{const R=Math.min(V1.h*0.4,V1.w*0.22);setB((V1.h*0.5-y)/R);if(s1.mode==='beam')setMode('ray');});
+$('#bsl').addEventListener('input',e=>setB(e.target.value/100));
+$('#rbray').addEventListener('click',()=>{setMode('ray');setB(critB(nOf(s1.colors?0:0.5)));});
+function setMode(m){s1.mode=m;$('#m-ray').setAttribute('aria-pressed',m==='ray');$('#m-beam').setAttribute('aria-pressed',m==='beam');draw1();draw1g();}
+$('#m-ray').addEventListener('click',()=>setMode('ray'));
+$('#m-beam').addEventListener('click',()=>setMode('beam'));
+$('#colors').addEventListener('change',e=>{s1.colors=e.target.checked;draw1();draw1g();});
+
+/* =====================================================
+   Section 2 — one drop, eye moves
+   ===================================================== */
+const s2={ang:41};
+function draw2(){
+  const{ctx,w,h}=V2;
+  ctx.fillStyle='#0d1530';ctx.fillRect(0,0,w,h);
+  const R=Math.min(h*0.11,44),cx=w*0.74,cy=h*0.58;
+  const R_=aR(),V_=aV();
+  // sunlight in
+  ctx.fillStyle='rgba(255,230,150,.5)';ctx.strokeStyle='rgba(255,230,150,.28)';ctx.lineWidth=1.5;
+  [-0.7,-0.2,0.3,0.75].forEach(f=>{const y=cy+f*R;const x1=cx-Math.sqrt(1-f*f)*R;
+    ctx.beginPath();ctx.moveTo(w*0.5,y);ctx.lineTo(x1,y);ctx.stroke();arrowHead(ctx,x1,y,0,7);});
+  ctx.fillStyle='#9fb0e6';ctx.font='14px system-ui';ctx.textAlign='left';ctx.fillText('☀ sunlight from behind you →',w*0.5-4,cy+R*1.5+22);
+  // all exits
+  const Lr=w*1.2;
+  for(let k=0;k<7;k++){const t=k/6,a=thetaMax(nOf(t))*D2R;
+    [[1,0.5],[-1,0.18]].forEach(([sg,al])=>{
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx-Math.cos(a)*Lr,cy-sg*Math.sin(a)*Lr);ctx.strokeStyle=rgba(col(t),al);ctx.lineWidth=2;ctx.stroke();});}
+  dropFill(ctx,cx,cy,R);
+  ctx.setLineDash([4,6]);ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(0,cy);ctx.stroke();ctx.setLineDash([]);
+  // eye
+  const ang=s2.ang*D2R,Lq=(cy-28)/Math.sin(52*D2R);
+  const ex=cx-Lq*Math.cos(ang),ey=cy-Lq*Math.sin(ang);
+  const sn=seen(s2.ang);
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ex,ey);
+  if(sn.i>0.05){ctx.strokeStyle=rgba(sn.c,Math.min(1,sn.i));ctx.lineWidth=4;ctx.setLineDash([]);}
+  else{ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1.5;ctx.setLineDash([4,6]);}
+  ctx.stroke();ctx.setLineDash([]);
+  // eye icon
+  ctx.beginPath();ctx.ellipse(ex,ey,17,10,0,0,7);ctx.fillStyle='#fff';ctx.fill();
+  ctx.beginPath();ctx.arc(ex+3,ey,6,0,7);ctx.fillStyle=sn.i>0.05?rgba(sn.c,1):'#456';ctx.fill();
+  ctx.beginPath();ctx.arc(ex+4,ey,2.5,0,7);ctx.fillStyle='#000';ctx.fill();
+  ctx.fillStyle='#9fb0e6';ctx.textAlign='center';ctx.fillText('you',ex,ey-20);
+  // angle arc
+  ctx.beginPath();ctx.arc(cx,cy,R+26,Math.PI,Math.PI+ang);ctx.strokeStyle='#ffd36b';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#ffd36b';ctx.font='bold 15px system-ui';ctx.textAlign='right';ctx.fillText(s2.ang.toFixed(1)+'°',cx-R-34,cy-8);
+  // color bar
+  const bx=w*0.06,bw=w*0.88,by=h-40,amin=V_-3,amax=R_+3;
+  for(let px=0;px<bw;px++){const a=amin+(px/bw)*(amax-amin),q=seen(a);ctx.fillStyle=rgba(q.c,q.i);ctx.fillRect(bx+px,by,1.5,14);}
+  ctx.strokeStyle='rgba(255,255,255,.3)';ctx.strokeRect(bx,by,bw,14);
+  const mx=bx+(s2.ang-amin)/(amax-amin)*bw;
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(mx,by-2);ctx.lineTo(mx-6,by-11);ctx.lineTo(mx+6,by-11);ctx.fill();
+  ctx.fillStyle='#8f9bc9';ctx.font='12px system-ui';ctx.textAlign='center';
+  ctx.fillText(V_.toFixed(1)+'° violet',bx+(V_-amin)/(amax-amin)*bw,by+28);
+  ctx.fillText(R_.toFixed(1)+'° red',bx+(R_-amin)/(amax-amin)*bw,by+28);
+  ctx.textAlign='left';ctx.fillText('← wider than red: dark',bx+bw-130,by-14);
+  ctx.textAlign='left';ctx.fillText('less than violet: pale glow',bx,by-14);
+  // readout
+  let msg;
+  if(sn.name&&sn.name!=='pale'&&sn.i>0.5)msg='<span class="swatch" style="background:'+rgba(sn.c,1)+'"></span>From here you see <b>'+sn.name+'</b>. Not a rainbow, just one color from this single drop.';
+  else if(sn.name==='pale')msg='<span class="swatch" style="background:#dfe8ff;opacity:.5"></span>From here you see a <b>pale, washed-out glow</b>: lots of colors mixed back together.';
+  else msg='<span class="swatch" style="background:#222"></span>From here the drop sends you <b>nothing</b>. Its light doesn\'t go this way.';
+  $('#r2').innerHTML=msg+'<br><span class="hint">The other colors from this same drop are going to other places, not into your eye.</span>';
+  $('#aval').textContent=s2.ang.toFixed(1)+'°';
+}
+function setAng(a){s2.ang=Math.max(34,Math.min(52,a));$('#asl').value=s2.ang;draw2();}
+$('#asl').addEventListener('input',e=>{stopSweep();setAng(+e.target.value);});
+bindPointer($('#c2'),(x,y)=>{stopSweep();const R=Math.min(V2.h*0.11,44),cx=V2.w*0.74,cy=V2.h*0.58;setAng(Math.atan2(cy-y,cx-x)/D2R);});
+let sweepId=0;
+function stopSweep(){if(sweepId){cancelAnimationFrame(sweepId);sweepId=0;$('#sweep').textContent='▶ Sweep';}}
+$('#sweep').addEventListener('click',()=>{
+  if(sweepId){stopSweep();return;}
+  $('#sweep').textContent='■ Stop';
+  const lo=aV()-2.5,hi=aR()+2.5,t0=performance.now(),dur=7000;
+  (function step(now){const u=((now-t0)%dur)/dur;setAng(lo+(hi-lo)*u);sweepId=requestAnimationFrame(step);})(t0);
+});
+
+/* =====================================================
+   Section 3 — many drops
+   ===================================================== */
+const MAXN=20000;
+const DX=new Float32Array(MAXN),DY=new Float32Array(MAXN),DZ=new Float32Array(MAXN);
+const E_MAX=58*D2R;
+function spawn(i,top){
+  const phi=(Math.random()*2-1)*E_MAX,d=20+Math.random()*100;
+  const se=top?Math.sin(E_MAX)*(0.9+0.1*Math.random()):Math.random()*Math.sin(E_MAX),ce=Math.sqrt(1-se*se);
+  DX[i]=d*ce*Math.cos(phi);DY[i]=d*ce*Math.sin(phi);DZ[i]=d*se;
+}
+for(let i=0;i<MAXN;i++)spawn(i,false);
+const SD=[];for(let i=0;i<350;i++)SD.push([Math.random(),Math.random()]);
+const LITX=new Float32Array(MAXN),LITY=new Float32Array(MAXN),LITT=new Uint8Array(MAXN);
+const s3={N:300,sun:20,rain:false,hide:false,ring:false,pin:[0.5,0.52]};
+const nFromSlider=v=>Math.max(1,Math.round(Math.pow(10,v/100*4.3)));
+
+function drawObs(){
+  const{ctx,w,h}=V3;
+  const K=w/2.25,hy=h*0.8,cx=w/2;
+  const g=ctx.createLinearGradient(0,0,0,hy);g.addColorStop(0,'#060a20');g.addColorStop(1,'#3a4a86');
+  ctx.fillStyle=g;ctx.fillRect(0,0,w,hy);
+  const s=s3.sun*D2R,cs=Math.cos(s),sn=Math.sin(s);
+  const R_=aR(),V_=aV(),cR=Math.cos(R_*D2R),cV=Math.cos(V_*D2R);
+  const N=s3.N;let nl=0;
+  ctx.fillStyle='rgba(200,220,255,0.55)';
+  for(let i=0;i<N;i++){
+    const x=DX[i],y=DY[i],z=DZ[i],len=Math.sqrt(x*x+y*y+z*z),vx=x/len,vy=y/len,vz=z/len;
+    const den=1+vx,px=cx-K*2*vy/den,py=hy-K*2*vz/den;
+    if(py<0||py>hy||px<0||px>w)continue;
+    const c=vx*cs-vz*sn;
+    if(c>=cR&&c<=cV){
+      const th=Math.acos(c)/D2R;LITX[nl]=px;LITY[nl]=py;LITT[nl]=Math.round(63*(R_-th)/(R_-V_));nl++;
+    }else if(!s3.hide)ctx.fillRect(px,py,1.6,1.6);
+  }
+  s3.lit=nl;
+  const r=2+9/(1+N/50);
+  ctx.globalCompositeOperation='lighter';
+  for(let k=0;k<nl;k++){ctx.fillStyle=STYLE[Math.max(0,Math.min(63,LITT[k]))];ctx.beginPath();ctx.arc(LITX[k],LITY[k],r,0,7);ctx.fill();}
+  ctx.globalCompositeOperation='source-over';
+  // ring guide
+  const A=[cs,0,-sn],B=[0,1,0],C=[sn,0,cs];
+  if(s3.ring){
+    const tm=(R_+V_)/2*D2R;ctx.setLineDash([6,6]);ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1.5;ctx.beginPath();let pen=false;
+    for(let psi=0;psi<=360;psi+=2){
+      const cp=Math.cos(psi*D2R),sp=Math.sin(psi*D2R),st=Math.sin(tm),ct=Math.cos(tm);
+      const u=[ct*A[0]+st*(cp*B[0]+sp*C[0]),ct*A[1]+st*(cp*B[1]+sp*C[1]),ct*A[2]+st*(cp*B[2]+sp*C[2])];
+      if(u[2]<0||1+u[0]<0.05){pen=false;continue;}
+      const px=cx-K*2*u[1]/(1+u[0]),py=hy-K*2*u[2]/(1+u[0]);
+      pen?ctx.lineTo(px,py):ctx.moveTo(px,py);pen=true;
+    }
+    ctx.stroke();ctx.setLineDash([]);
+  }
+  // ground
+  const gg=ctx.createLinearGradient(0,hy,0,h);gg.addColorStop(0,'rgba(18,40,30,.97)');gg.addColorStop(1,'rgba(8,18,14,.99)');
+  ctx.fillStyle=gg;ctx.fillRect(0,hy,w,h-hy);
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.beginPath();ctx.moveTo(0,hy);ctx.lineTo(w,hy);ctx.stroke();
+  // shadow-point marker
+  const my=hy-K*2*(-sn)/(1+cs);
+  if(my<h-22){
+    ctx.strokeStyle='#ffd36b';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx-8,my);ctx.lineTo(cx+8,my);ctx.moveTo(cx,my-8);ctx.lineTo(cx,my+8);ctx.stroke();
+    ctx.fillStyle='#ffd36b';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('your shadow\'s head points here',cx,my+24);
+  }
+  // pin
+  const pxp=Math.max(10,Math.min(w-10,s3.pin[0]*w)),pyp=Math.max(10,Math.min(hy-10,s3.pin[1]*h));
+  const X=(cx-pxp)/K,Y=(hy-pyp)/K,den=4+X*X+Y*Y,vx=(4-X*X-Y*Y)/den,vz=4*Y/den;
+  const th=Math.acos(Math.max(-1,Math.min(1,vx*cs-vz*sn)))/D2R,sg=seen(th);
+  ctx.beginPath();ctx.arc(pxp,pyp,11,0,7);ctx.fillStyle=sg.i>0.05?rgba(sg.c,Math.min(1,0.25+sg.i)):'rgba(200,220,255,.5)';ctx.fill();
+  ctx.lineWidth=2.5;ctx.strokeStyle='#fff';ctx.stroke();
+  // readout
+  let m='<b>'+N.toLocaleString()+'</b> drops, <b>'+nl.toLocaleString()+'</b> of them are in the right spot to send you a color. ';
+  if(nl===0)m+='None this time. Add more drops!';
+  else if(N<80)m+='Just a few colored dots, scattered like a dotted line.';
+  else if(N<2000)m+='The dots start to trace out a curved band: red outside, violet inside.';
+  else m+='So many that the dots blend into a smooth rainbow.';
+  const pm=sg.i>0.5&&sg.name&&sg.name!=='pale'?'<b>'+sg.name+'</b>':sg.name==='pale'?'a <b>pale glow</b>':'<b>nothing</b>';
+  m+='<br><span class="swatch" style="background:'+(sg.i>0.05?rgba(sg.c,1):'#222')+'"></span>The drop with the white ring is <b>'+th.toFixed(1)+'°</b> from the shadow point, so it sends you '+pm+'.';
+  $('#r3').innerHTML=m;
+  $('#nval').textContent=N.toLocaleString();$('#sval').textContent=s3.sun+'°';
+}
+function drawSide(){
+  const{ctx,w,h}=V4;
+  const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#060a20');g.addColorStop(1,'#34447f');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  const ground=h*0.88,ex=w*0.2,ey=h*0.8,s=s3.sun*D2R,R_=aR(),V_=aV();
+  // sun and rays
+  const SDm=w*0.17,sx=ex-Math.cos(s)*SDm,sy=ey-Math.sin(s)*SDm;
+  ctx.strokeStyle='rgba(255,230,150,.1)';ctx.lineWidth=1.5;
+  for(let q=-6;q<=14;q++){const ox=ex-Math.sin(s)*q*h*0.08,oy=ey+Math.cos(s)*q*h*0.08;
+    ctx.beginPath();ctx.moveTo(ox-Math.cos(s)*w*1.5,oy-Math.sin(s)*w*1.5);ctx.lineTo(ox+Math.cos(s)*w*1.5,oy+Math.sin(s)*w*1.5);ctx.stroke();}
+  ctx.beginPath();ctx.arc(sx,sy,13,0,7);ctx.fillStyle='#ffd36b';ctx.shadowColor='#ffd36b';ctx.shadowBlur=24;ctx.fill();ctx.shadowBlur=0;
+  // shadow-direction line
+  ctx.setLineDash([5,6]);ctx.strokeStyle='rgba(255,255,255,.35)';ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(ex+Math.cos(s)*w,ey+Math.sin(s)*w);ctx.stroke();ctx.setLineDash([]);
+  // wedge
+  const Lw=w*1.3,S=40;
+  for(let k=0;k<S;k++){
+    const e0=(R_-(R_-V_)*k/S)-s3.sun,e1=(R_-(R_-V_)*(k+1)/S)-s3.sun;
+    ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(ex+Math.cos(e0*D2R)*Lw,ey-Math.sin(e0*D2R)*Lw);ctx.lineTo(ex+Math.cos(e1*D2R)*Lw,ey-Math.sin(e1*D2R)*Lw);ctx.closePath();
+    ctx.fillStyle=rgba(col((k+0.5)/S),0.2);ctx.fill();}
+  // drops
+  const M=Math.min(s3.N,SD.length),top=h*0.04;let nl=0;
+  for(let i=0;i<M;i++){
+    const px=w*(0.3+0.69*SD[i][0]),py=top+(ground-top-6)*SD[i][1];
+    const e=Math.atan2(ey-py,px-ex)/D2R,th=e+s3.sun;
+    if(th>=V_&&th<=R_){
+      nl++;const t=(R_-th)/(R_-V_),c=col(t);
+      ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px-Math.cos(s)*w*0.18,py-Math.sin(s)*w*0.18);ctx.strokeStyle='rgba(255,230,150,.4)';ctx.lineWidth=1;ctx.stroke();
+      ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(ex,ey);ctx.strokeStyle=rgba(c,0.55);ctx.lineWidth=1.3;ctx.stroke();
+      ctx.beginPath();ctx.arc(px,py,4,0,7);ctx.fillStyle=rgba(c,1);ctx.fill();
+    }else if(!s3.hide){ctx.beginPath();ctx.arc(px,py,1.8,0,7);ctx.fillStyle='rgba(200,220,255,.5)';ctx.fill();}
+  }
+  // ground + eye
+  ctx.fillStyle='#10261c';ctx.fillRect(0,ground,w,h-ground);
+  ctx.beginPath();ctx.ellipse(ex,ey,15,9,0,0,7);ctx.fillStyle='#fff';ctx.fill();
+  ctx.beginPath();ctx.arc(ex+3,ey,5,0,7);ctx.fillStyle='#456';ctx.fill();
+  ctx.fillStyle='#9fb0e6';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('you',ex,ey-16);
+  ctx.textAlign='left';ctx.fillText('sun',Math.max(4,sx-10),sy+30);
+  if(s3.N>SD.length){ctx.fillStyle='#8f9bc9';ctx.textAlign='right';ctx.fillText('showing a sample of '+SD.length+' drops',w-8,16);}
+}
+function redraw3(){drawObs();drawSide();}
+$('#nsl').addEventListener('input',e=>{s3.N=nFromSlider(+e.target.value);redraw3();});
+$('#ssl').addEventListener('input',e=>{s3.sun=+e.target.value;redraw3();});
+$('#hide').addEventListener('change',e=>{s3.hide=e.target.checked;redraw3();});
+$('#ring').addEventListener('change',e=>{s3.ring=e.target.checked;redraw3();});
+bindPointer($('#c3'),(x,y)=>{s3.pin=[x/V3.w,y/V3.h];if(!s3.rain)redraw3();});
+let rainId=0,lastT=0;
+function rainStep(now){
+  const dt=Math.min(0.05,(now-lastT)/1000);lastT=now;
+  const N=s3.N;
+  for(let i=0;i<N;i++){DZ[i]-=4*dt;if(DZ[i]<0)spawn(i,true);}
+  for(let i=0;i<SD.length;i++){SD[i][1]+=dt*0.12;if(SD[i][1]>1)SD[i][1]-=1;}
+  redraw3();rainId=requestAnimationFrame(rainStep);
+}
+$('#rain').addEventListener('change',e=>{
+  s3.rain=e.target.checked;
+  if(s3.rain){lastT=performance.now();rainId=requestAnimationFrame(rainStep);}
+  else{cancelAnimationFrame(rainId);rainId=0;}
+});
+
+/* ---------- init ---------- */
+function layout(){
+  V1=setup($('#c1'),0.58,440);V1g=setup($('#c1g'),0.26,190);V2=setup($('#c2'),0.5,420);V3=setup($('#c3'),0.62,540);V4=setup($('#c4'),0.4,330);
+  s3.N=nFromSlider(+$('#nsl').value);
+  draw1();draw1g();draw2();redraw3();
+}
+$('#spread').addEventListener('change',e=>{
+  SPREAD=e.target.checked?5:1;
+  s2.ang=(aR()+aV())/2;$('#asl').value=s2.ang;
+  draw1();draw1g();draw2();redraw3();
+});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(layout,120);});
+s2.ang=(aR()+aV())/2;$('#asl').value=Math.round(s2.ang*10)/10;
+layout();
+})();
+</script>
+</body>
+</html>
