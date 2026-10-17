@@ -36,6 +36,11 @@ button:hover{border-color:var(--accent)}
 .stretch{display:inline-flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:15px;color:var(--muted);text-align:left}
 .answer ul{padding-left:20px}.answer li{margin:8px 0}
 .answer .big{font-size:20px;color:var(--good)}
+.sub{border-top:1px solid var(--line);margin-top:24px;padding-top:16px}
+.sub h3{margin:0 0 4px;font-size:20px;color:var(--accent)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
+.pair .stage{margin:0}
+@media(max-width:640px){.pair{grid-template-columns:1fr}}
 footer{text-align:center;color:var(--muted);font-size:14px;margin-top:30px}
 </style>
 </head>
@@ -97,6 +102,49 @@ footer{text-align:center;color:var(--muted);font-size:14px;margin-top:30px}
 
 <section class="card answer">
   <h2><span class="num">4</span> So why not lots of little rainbows?</h2>
+  <p>Three more pictures answer that. First: what happens when drops stand one behind the other. Second: where the center of the rainbow is. Third: why it bends into an arc.</p>
+
+  <div class="sub">
+    <h3>4a · Drops one behind the other</h3>
+    <p>This is a map of the rain seen from above, with you on the left. Pick one line of sight. Every drop on that line, near or far, is at the <b>same angle</b>, so it sends you the <b>same color</b>. And in your eye they all land on the <b>same spot</b>. They don't build a new rainbow. They only make that spot <b>brighter</b>.</p>
+    <div class="stage"><canvas id="c5"></canvas></div>
+    <div class="controls">
+      <label>Drops on the line <input type="range" id="k5" min="1" max="12" value="1"> <span class="val" id="kval"></span></label>
+      <label>Look at angle <input type="range" id="a5" min="34" max="52" step="0.1" value="41"> <span class="val" id="a5val"></span></label>
+      <label>Spread them sideways <input type="range" id="p5" min="0" max="100" value="0"></label>
+    </div>
+    <div class="readout" id="r5"></div>
+    <p class="hint">Try the "spread" slider: once the drops leave the line, each one is at its own angle, so each lands in its own place with its own color.</p>
+  </div>
+
+  <div class="sub">
+    <h3>4b · Your head's shadow</h3>
+    <p>Where is the middle of the rainbow? Stand with the sun behind you. A ray of sunlight skims past your head and hits the ground at the tip of your head's shadow. Looking along that line, away from the sun, you find the <b>anti-solar point</b>: the spot exactly opposite the sun. The rainbow is a ring of drops <b>about 42° around that spot</b>.</p>
+    <div class="stage"><canvas id="c6"></canvas></div>
+    <div class="controls">
+      <label>Sun height <input type="range" id="h6" min="3" max="60" value="20"> <span class="val" id="h6val"></span></label>
+    </div>
+    <div class="readout" id="r6"></div>
+    <p class="hint">Lower sun, longer shadow, higher rainbow. The shadow's tip always sits at the center of the ring.</p>
+  </div>
+
+  <div class="sub">
+    <h3>4c · Why is it an arc?</h3>
+    <p>All the drops that send you red sit on the surface of a <b>cone</b>: your eye is the tip, the line toward your head's shadow is the axis, and the sides are 42° away from it. Seen from the tip, a cone is a <b>circle</b>. The ground simply cuts off the bottom, so you only see the top part: an <b>arc</b>.</p>
+    <div class="pair">
+      <div class="stage"><canvas id="c7"></canvas></div>
+      <div class="stage"><canvas id="c8"></canvas></div>
+    </div>
+    <div class="controls">
+      <label>Camera <small>(side ↔ your view)</small> <input type="range" id="yaw" min="0" max="100" value="25"></label>
+      <label>Sun height <input type="range" id="h7" min="0" max="60" value="20"> <span class="val" id="h7val"></span></label>
+    </div>
+    <div class="readout" id="r7"></div>
+    <p class="hint">Left: a 3D picture of the cone of red-to-violet light. Bright rings are above the ground, faded ones are hidden below it. Right: what you actually see.</p>
+  </div>
+
+  <div class="sub">
+  <h3>The short answer</h3>
   <ul>
     <li><span class="big">One drop does NOT make a whole rainbow.</span> It sends all its colors out, but each color goes a different way. You only catch one color from it.</li>
     <li>The color you catch depends on the <b>angle</b>: about 42° from your shadow's direction is <b style="color:#ff6b6b">red</b>, about 40° is <b style="color:#b27bff">violet</b>, and the colors fall in between.</li>
@@ -106,6 +154,7 @@ footer{text-align:center;color:var(--muted);font-size:14px;margin-top:30px}
     <li>Try the sun-height slider: when the sun is higher than about 42°, the ring is below the horizon and you can't see it from the ground.</li>
     <li><b>Bonus:</b> a faint second rainbow appears when light bounces <i>twice</i> inside a drop. It comes out at about 51°, with the colors upside down.</li>
   </ul>
+  </div>
 </section>
 
 <footer>Made with curiosity 🌦 · Physics: one internal reflection, Snell's law, water n ≈ 1.33</footer>
@@ -189,7 +238,7 @@ function arrowHead(ctx,x,y,ang,s){
   ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-s*Math.cos(ang-.45),y-s*Math.sin(ang-.45));ctx.lineTo(x-s*Math.cos(ang+.45),y-s*Math.sin(ang+.45));ctx.closePath();ctx.fill();
 }
 
-let V1,V1g,V2,V3,V4;
+let V1,V1g,V2,V3,V4,V5,V6,V7,V8;
 
 /* =====================================================
    Section 1 — one drop
@@ -514,19 +563,263 @@ $('#rain').addEventListener('change',e=>{
   else{cancelAnimationFrame(rainId);rainId=0;}
 });
 
+
+/* =====================================================
+   Section 4 — more diagrams
+   ===================================================== */
+const s4={sun:20,yaw:67};
+const midA=()=>(aR()+aV())/2;
+
+/* ---- 4a: drops one behind the other ---- */
+const s5={k:1,ang:41,spread:0};
+const RJ=[],FR=[],BG=[];
+for(let j=0;j<14;j++){RJ.push(((j*0.7548776662)%1)*2-1);FR.push(0.2+0.72*((j*0.618034+0.13)%1));}
+for(let j=0;j<70;j++)BG.push([Math.random(),Math.random()]);
+function draw5(){
+  const{ctx,w,h}=V5,R_=aR(),V_=aV();
+  ctx.fillStyle='#0d1530';ctx.fillRect(0,0,w,h);
+  const W5=w*0.64,ex=w*0.05,ey=h*0.6;
+  ctx.save();ctx.beginPath();ctx.rect(0,0,W5,h);ctx.clip();
+  const S=30;
+  for(let k=0;k<S;k++){
+    const a0=(R_-(R_-V_)*k/S)*D2R,a1=(R_-(R_-V_)*(k+1)/S)*D2R,L=W5*2;
+    ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(ex+Math.cos(a0)*L,ey-Math.sin(a0)*L);ctx.lineTo(ex+Math.cos(a1)*L,ey-Math.sin(a1)*L);ctx.closePath();
+    ctx.fillStyle=rgba(col((k+.5)/S),0.16);ctx.fill();
+  }
+  ctx.setLineDash([5,6]);ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(W5,ey);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(200,220,255,.4)';
+  for(const[fx,fy]of BG){
+    const x=ex+30+(W5-ex-40)*fx,y=10+(h-20)*fy,a=Math.atan2(ey-y,x-ex)/D2R;
+    if(a>=V_-0.5&&a<=R_+0.5)continue;
+    ctx.beginPath();ctx.arc(x,y,1.8,0,7);ctx.fill();
+  }
+  const ca=Math.cos(s5.ang*D2R),sa=Math.sin(s5.ang*D2R);
+  const Lmax=Math.min((W5-ex-14)/ca,(ey-14)/sa);
+  const pts=[];
+  for(let j=0;j<s5.k;j++){
+    const d=Lmax*FR[j],p=RJ[j]*s5.spread*w*0.07;
+    const x=ex+ca*d+sa*p,y=ey-sa*d+ca*p,a=Math.atan2(ey-y,x-ex)/D2R;
+    pts.push({x,y,a,q:seen(a)});
+  }
+  for(const p of pts){
+    ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(ex,ey);
+    if(p.q.i>0.05){ctx.strokeStyle=rgba(p.q.c,Math.min(1,p.q.i)*0.8);ctx.lineWidth=3;}else{ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1;}
+    ctx.stroke();
+  }
+  for(const p of pts){
+    ctx.beginPath();ctx.arc(p.x,p.y,6,0,7);ctx.fillStyle=p.q.i>0.05?rgba(p.q.c,1):'rgba(200,220,255,.6)';ctx.fill();
+    ctx.lineWidth=2;ctx.strokeStyle='#fff';ctx.stroke();
+  }
+  ctx.restore();
+  ctx.beginPath();ctx.ellipse(ex,ey,15,9,0,0,7);ctx.fillStyle='#fff';ctx.fill();
+  ctx.beginPath();ctx.arc(ex+3,ey,5,0,7);ctx.fillStyle='#456';ctx.fill();
+  ctx.fillStyle='#9fb0e6';ctx.font='13px system-ui';ctx.textAlign='left';
+  ctx.fillText('☀ sun is behind you',8,18);ctx.fillText('bird\'s-eye view of the rain',8,h-8);
+  ctx.fillText('you',ex-6,ey+26);
+  // eye-view panel
+  const bx=W5+w*0.04,bw=w-bx-8,by=h*0.2,bh=h*0.5,amin=V_-3,amax=R_+3;
+  ctx.fillStyle='#070b20';ctx.fillRect(bx,by,bw,bh);ctx.strokeStyle='rgba(255,255,255,.25)';ctx.strokeRect(bx,by,bw,bh);
+  ctx.fillStyle='#9fb0e6';ctx.textAlign='center';ctx.fillText('What your eye sees',bx+bw/2,by-8);
+  ctx.save();ctx.beginPath();ctx.rect(bx,by,bw,bh);ctx.clip();ctx.globalCompositeOperation='lighter';
+  const gr=Math.min(34,bw*0.32);
+  for(const p of pts){
+    if(p.q.i<0.05)continue;
+    const x=bx+(p.a-amin)/(amax-amin)*bw,y=by+bh/2,g=ctx.createRadialGradient(x,y,0,x,y,gr);
+    g.addColorStop(0,rgba(p.q.c,0.3*p.q.i));g.addColorStop(1,rgba(p.q.c,0));
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,gr,0,7);ctx.fill();
+  }
+  ctx.restore();
+  ctx.fillStyle='#8f9bc9';ctx.font='12px system-ui';ctx.textAlign='left';ctx.fillText('← narrower',bx,by+bh+16);
+  ctx.textAlign='right';ctx.fillText('wider →',bx+bw,by+bh+16);
+  // readout
+  const sn=seen(s5.ang),k=s5.k,lit=pts.filter(p=>p.q.i>0.05).length;
+  let m;
+  if(s5.spread===0){
+    m=k===1?'One drop on the line: <b>one spot</b> of ':'<b>'+k+' drops</b> on the same line: still <b>one spot</b>, but it\'s brighter. ';
+    m+=sn.name&&sn.name!=='pale'&&sn.i>0.5?'<b>'+sn.name+'</b>.':'(nothing much at this angle, try moving the angle slider).';
+    m+=k>1?'<br>Drops that are in the same direction can\'t make a second rainbow. They just add their light together.':'';
+  }else{
+    m='The <b>'+k+' drops</b> now sit at different angles, so you see <b>'+lit+'</b> separate spot'+(lit===1?'':'s')+', each with its own color. Spots at different angles are how a rainbow gets its colors in different places.';
+  }
+  $('#r5').innerHTML=m;
+  $('#kval').textContent=k;$('#a5val').textContent=s5.ang.toFixed(1)+'°';
+}
+$('#k5').addEventListener('input',e=>{s5.k=+e.target.value;draw5();});
+$('#a5').addEventListener('input',e=>{s5.ang=+e.target.value;draw5();});
+$('#p5').addEventListener('input',e=>{s5.spread=e.target.value/100;draw5();});
+
+/* ---- 4b: head's shadow ---- */
+function draw6(){
+  const{ctx,w,h}=V6,sd=s4.sun,s=sd*D2R,R_=aR(),V_=aV(),mid=midA();
+  const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#060a20');g.addColorStop(1,'#34447f');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  const gy=h*0.84,px=w*0.26,Hp=h*0.36,hr=Hp*0.09,Ex=px,Ey=gy-Hp+hr,dx=Math.cos(s),dy=Math.sin(s);
+  const S=40,Lw=w*1.4;
+  for(let k=0;k<S;k++){
+    const e0=(R_-(R_-V_)*k/S-sd)*D2R,e1=(R_-(R_-V_)*(k+1)/S-sd)*D2R;
+    ctx.beginPath();ctx.moveTo(Ex,Ey);ctx.lineTo(Ex+Math.cos(e0)*Lw,Ey-Math.sin(e0)*Lw);ctx.lineTo(Ex+Math.cos(e1)*Lw,Ey-Math.sin(e1)*Lw);ctx.closePath();
+    ctx.fillStyle=rgba(col((k+.5)/S),0.2);ctx.fill();
+  }
+  ctx.strokeStyle='rgba(255,230,150,.10)';ctx.lineWidth=1.5;
+  for(let q=-5;q<=14;q++){const ox=Ex-dy*q*h*0.09,oy=Ey+dx*q*h*0.09;ctx.beginPath();ctx.moveTo(ox-dx*w*2,oy-dy*w*2);ctx.lineTo(ox+dx*w*2,oy+dy*w*2);ctx.stroke();}
+  // sun and the ray that skims your head
+  const sx=Ex-dx*w*0.24,sy=Ey-dy*w*0.24;
+  ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(Ex,Ey);ctx.strokeStyle='rgba(255,226,140,.95)';ctx.lineWidth=2.5;ctx.stroke();
+  ctx.beginPath();ctx.arc(sx,sy,13,0,7);ctx.fillStyle='#ffd36b';ctx.shadowColor='#ffd36b';ctx.shadowBlur=24;ctx.fill();ctx.shadowBlur=0;
+  ctx.fillStyle='#10261c';ctx.fillRect(0,gy,w,h-gy);
+  const scale=(gy-Ey)/dy,tipx=Ex+dx*scale;
+  // line of the head's shadow = anti-solar direction
+  ctx.setLineDash([6,5]);ctx.strokeStyle='rgba(255,226,140,.95)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(Ex,Ey);ctx.lineTo(Ex+dx*Math.min(scale,w*3),Ey+dy*Math.min(scale,w*3));ctx.stroke();
+  ctx.setLineDash([3,6]);ctx.strokeStyle='rgba(255,226,140,.4)';
+  ctx.beginPath();ctx.moveTo(tipx,gy);ctx.lineTo(tipx+dx*w,gy+dy*w);ctx.stroke();ctx.setLineDash([]);
+  // shadow on the ground
+  ctx.strokeStyle='rgba(0,0,0,.7)';ctx.lineWidth=7;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(px,gy+6);ctx.lineTo(Math.min(tipx,w-4),gy+6);ctx.stroke();ctx.lineCap='butt';
+  ctx.font='13px system-ui';
+  if(tipx<w-14){
+    ctx.beginPath();ctx.arc(tipx,gy+6,hr*1.15,0,7);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='#ffd36b';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#ffd36b';ctx.textAlign='center';ctx.fillText('your head\'s shadow',Math.min(tipx,w-70),gy+34);
+  }else{ctx.fillStyle='#ffd36b';ctx.textAlign='right';ctx.fillText('your head\'s shadow is far away →',w-8,gy+34);}
+  // person
+  ctx.strokeStyle='#e8eeff';ctx.lineWidth=5;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(px,Ey+hr);ctx.lineTo(px,gy-Hp*0.42);ctx.moveTo(px,gy-Hp*0.42);ctx.lineTo(px-Hp*0.12,gy);ctx.moveTo(px,gy-Hp*0.42);ctx.lineTo(px+Hp*0.12,gy);
+  ctx.moveTo(px,Ey+hr+Hp*0.18);ctx.lineTo(px-Hp*0.17,Ey+hr+Hp*0.42);ctx.moveTo(px,Ey+hr+Hp*0.18);ctx.lineTo(px+Hp*0.17,Ey+hr+Hp*0.42);ctx.stroke();ctx.lineCap='butt';
+  ctx.beginPath();ctx.arc(Ex,Ey,hr,0,7);ctx.fillStyle='#f3dcc0';ctx.fill();
+  // horizon
+  ctx.setLineDash([2,5]);ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(Ex,Ey);ctx.lineTo(w,Ey);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#cfd8ff';ctx.textAlign='right';ctx.fillText('horizon (eye level)',w-8,Ey-6);
+  // angle arcs
+  const ar=Math.min(w*0.2,Hp*1.25);
+  ctx.beginPath();ctx.arc(Ex,Ey,ar,-(mid-sd)*D2R,s);ctx.strokeStyle='#ffd36b';ctx.lineWidth=2;ctx.stroke();
+  const am=(-(mid-sd)*D2R+s)/2;
+  ctx.fillStyle='#ffd36b';ctx.font='bold 14px system-ui';ctx.textAlign='left';ctx.fillText('about 42°',Ex+Math.cos(am)*(ar+8),Ey+Math.sin(am)*(ar+8)+4);
+  if(mid-sd>2){
+    ctx.beginPath();ctx.arc(Ex,Ey,ar*0.55,-(mid-sd)*D2R,0);ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='13px system-ui';ctx.fillText((mid-sd).toFixed(0)+'°',Ex+ar*0.6,Ey-(mid-sd)*D2R*ar*0.28-2);
+  }
+  ctx.fillStyle='#9fb0e6';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('you',Ex,Ey-hr-8);
+  ctx.save();ctx.translate(Ex+dx*Math.min(scale*0.55,w*0.5),Ey+dy*Math.min(scale*0.55,w*0.5)-10);ctx.rotate(s);
+  ctx.fillStyle='#ffe28c';ctx.textAlign='center';ctx.fillText('straight away from the sun',0,0);ctx.restore();
+  ctx.fillStyle='#cfd8ff';ctx.textAlign='left';ctx.fillText('top of the rainbow',Math.min(w*0.66,Ex+Math.cos((mid-sd)*D2R)*w*0.4),Math.max(16,Ey-Math.sin((mid-sd)*D2R)*w*0.4-6));
+  const el=mid-sd;
+  $('#r6').innerHTML='The sun is <b>'+sd+'°</b> above the horizon. A ray skims your head and lands at the tip of your head\'s shadow: that\'s the direction <b>straight away from the sun</b>, the center of the rainbow\'s circle. The rainbow is a ring about <b>42°</b> around it, so its top is '+(el>0?'<b>'+el.toFixed(0)+'°</b> above the horizon.':'<b>below the horizon</b>: from the ground you can\'t see it.');
+  $('#h6val').textContent=sd+'°';
+}
+
+/* ---- 4c: cone + arc ---- */
+function ringPts(th,sd,f){
+  const s=sd*D2R,cs=Math.cos(s),sn=Math.sin(s),ct=Math.cos(th),st=Math.sin(th);
+  for(let psi=0;psi<=360;psi+=3){
+    const cp=Math.cos(psi*D2R),sp=Math.sin(psi*D2R);
+    f(ct*cs+st*sp*sn,st*cp,-ct*sn+st*sp*cs);          // A·ct + st(cp·B + sp·C)
+  }
+}
+function draw7(){
+  const{ctx,w,h}=V7,sd=s4.sun,s=sd*D2R,yaw=s4.yaw*D2R,tau=18*D2R;
+  const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#060a20');g.addColorStop(1,'#26356a');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  const K=Math.min(w*0.45,h*0.5),ox=w/2-0.075*K*Math.sin(yaw),oy=h*0.5,GZ=-0.05;
+  const P=(x,y,z)=>{const xp=x*Math.cos(yaw)+y*Math.sin(yaw),yp=-x*Math.sin(yaw)+y*Math.cos(yaw);return[ox-K*yp,oy-K*(z*Math.cos(tau)+xp*Math.sin(tau))];};
+  // ground
+  const c=[P(-0.9,-1,GZ),P(1.1,-1,GZ),P(1.1,1,GZ),P(-0.9,1,GZ)];
+  ctx.beginPath();c.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.fillStyle='rgba(30,90,55,.45)';ctx.fill();
+  ctx.strokeStyle='rgba(120,220,160,.22)';ctx.lineWidth=1;
+  for(let q=-1;q<=1.001;q+=0.25){let a=P(-0.9,q,GZ),b=P(1.1,q,GZ);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();}
+  for(let q=-0.9;q<=1.101;q+=0.25){let a=P(q,-1,GZ),b=P(q,1,GZ);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();}
+  // spokes
+  const tm=midA()*D2R;ctx.strokeStyle='rgba(255,255,255,.1)';
+  ringPts(tm,sd,(x,y,z)=>{});
+  for(let psi=0;psi<360;psi+=30){
+    const cp=Math.cos(psi*D2R),sp=Math.sin(psi*D2R),ct=Math.cos(tm),st=Math.sin(tm);
+    const q=P(ct*Math.cos(s)+st*sp*Math.sin(s),st*cp,-ct*Math.sin(s)+st*sp*Math.cos(s)),e=P(0,0,0);
+    ctx.beginPath();ctx.moveTo(e[0],e[1]);ctx.lineTo(q[0],q[1]);ctx.stroke();
+  }
+  // rings: faded (hidden by ground) first, then bright
+  for(let pass=0;pass<2;pass++){
+    for(let k=0;k<7;k++){
+      const t=k/6,th=thetaMax(nOf(t))*D2R;
+      ctx.beginPath();let pen=false;
+      ringPts(th,sd,(x,y,z)=>{
+        const vis=z>=GZ;
+        if(vis!==(pass===1)){pen=false;return;}
+        const p=P(x,y,z);pen?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]);pen=true;
+      });
+      ctx.strokeStyle=rgba(col(t),pass?0.95:0.22);ctx.lineWidth=pass?2.6:1.4;ctx.stroke();
+    }
+  }
+  // axis + anti-solar point
+  const e=P(0,0,0),a=P(Math.cos(s),0,-Math.sin(s));
+  ctx.setLineDash([5,5]);ctx.strokeStyle='#ffe28c';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(e[0],e[1]);ctx.lineTo(a[0],a[1]);ctx.stroke();ctx.setLineDash([]);
+  ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a[0]-7,a[1]);ctx.lineTo(a[0]+7,a[1]);ctx.moveTo(a[0],a[1]-7);ctx.lineTo(a[0],a[1]+7);ctx.stroke();
+  ctx.font='12px system-ui';ctx.fillStyle='#ffe28c';ctx.textAlign='center';ctx.fillText('center of the ring',a[0],a[1]+22);
+  // sun behind the eye
+  const sp=P(-0.85*Math.cos(s),0,0.85*Math.sin(s));
+  ctx.beginPath();ctx.arc(sp[0],sp[1],10,0,7);ctx.fillStyle='#ffd36b';ctx.shadowColor='#ffd36b';ctx.shadowBlur=18;ctx.fill();ctx.shadowBlur=0;
+  // eye
+  ctx.beginPath();ctx.ellipse(e[0],e[1],13,8,0,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.beginPath();ctx.arc(e[0]+2,e[1],4.5,0,7);ctx.fillStyle='#345';ctx.fill();
+  ctx.fillStyle='#9fb0e6';ctx.textAlign='left';ctx.fillText('you',e[0]+16,e[1]-8);
+  ctx.fillStyle='#8f9bc9';ctx.font='12px system-ui';ctx.fillText('bright = visible, faded = hidden by the ground',8,h-8);
+}
+function draw8(){
+  const{ctx,w,h}=V8,sd=s4.sun,s=sd*D2R,cs=Math.cos(s),sn=Math.sin(s);
+  const K=w/2.5,hy=h*0.74,cx=w/2;
+  const g=ctx.createLinearGradient(0,0,0,hy);g.addColorStop(0,'#060a20');g.addColorStop(1,'#3a4a86');ctx.fillStyle=g;ctx.fillRect(0,0,w,hy);
+  const proj=(x,y,z)=>[cx-K*2*y/(1+x),hy-K*2*z/(1+x)];
+  let tot=0,up=0;
+  for(let pass=0;pass<2;pass++){
+    for(let k=0;k<7;k++){
+      const t=k/6,th=thetaMax(nOf(t))*D2R;
+      ctx.beginPath();let pen=false;
+      ringPts(th,sd,(x,y,z)=>{
+        if(k===3&&pass===0){tot++;if(z>=0)up++;}
+        if(1+x<0.1){pen=false;return;}
+        if((z>=0)!==(pass===1)){pen=false;return;}
+        const p=proj(x,y,z);pen?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]);pen=true;
+      });
+      ctx.strokeStyle=rgba(col(t),pass?0.95:0.3);ctx.lineWidth=pass?Math.max(3,w*0.011):1.5;ctx.setLineDash(pass?[]:[3,4]);ctx.stroke();ctx.setLineDash([]);
+    }
+  }
+  const gg=ctx.createLinearGradient(0,hy,0,h);gg.addColorStop(0,'rgba(18,40,30,.9)');gg.addColorStop(1,'rgba(8,18,14,.97)');
+  ctx.fillStyle=gg;ctx.fillRect(0,hy,w,h-hy);
+  ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,hy);ctx.lineTo(w,hy);ctx.stroke();
+  const m=proj(cs,0,-sn);
+  if(m[1]<h-10){
+    ctx.strokeStyle='#ffe28c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(m[0]-7,m[1]);ctx.lineTo(m[0]+7,m[1]);ctx.moveTo(m[0],m[1]-7);ctx.lineTo(m[0],m[1]+7);ctx.stroke();
+  }
+  ctx.fillStyle='#9fb0e6';ctx.font='12px system-ui';ctx.textAlign='left';ctx.fillText('your view',8,16);
+  ctx.fillStyle='#8f9bc9';ctx.textAlign='right';ctx.fillText('ground hides the rest',w-8,h-8);
+  const frac=up/tot,el=midA()-sd;
+  let txt;
+  if(el<=0)txt='With the sun this high, the whole ring is <b>below the horizon</b>: no rainbow from the ground.';
+  else if(sd<1)txt='The sun is on the horizon, so the ring\'s center is on the horizon too: you see exactly <b>half the circle</b>.';
+  else txt='The sun is <b>'+sd+'°</b> high, so the center of the ring is <b>'+sd+'° below</b> the horizon. The ground hides part of the circle and you see about <b>'+Math.round(frac*100)+'%</b> of it: a smaller arc. A lower sun gives a bigger arc.';
+  $('#r7').innerHTML=txt+' <span class="hint">(From a plane or a mountain top, you can look further down and see the whole circle!)</span>';
+  $('#h7val').textContent=sd+'°';
+}
+function redraw4(){draw6();draw7();draw8();}
+function setSun4(v,src){
+  s4.sun=+v;
+  if(src!=='h6')$('#h6').value=Math.max(3,s4.sun);
+  if(src!=='h7')$('#h7').value=s4.sun;
+  redraw4();
+}
+$('#h6').addEventListener('input',e=>setSun4(e.target.value,'h6'));
+$('#h7').addEventListener('input',e=>setSun4(e.target.value,'h7'));
+$('#yaw').addEventListener('input',e=>{s4.yaw=(100-e.target.value)/100*90;draw7();});
+
 /* ---------- init ---------- */
 function layout(){
-  V1=setup($('#c1'),0.58,440);V1g=setup($('#c1g'),0.26,190);V2=setup($('#c2'),0.5,420);V3=setup($('#c3'),0.62,540);V4=setup($('#c4'),0.4,330);
+  V1=setup($('#c1'),0.58,440);V1g=setup($('#c1g'),0.26,190);V2=setup($('#c2'),0.5,420);V3=setup($('#c3'),0.62,540);V4=setup($('#c4'),0.4,330);V5=setup($('#c5'),0.5,380);V6=setup($('#c6'),0.45,360);V7=setup($('#c7'),0.95,400);V8=setup($('#c8'),0.95,400);
   s3.N=nFromSlider(+$('#nsl').value);
-  draw1();draw1g();draw2();redraw3();
+  draw1();draw1g();draw2();redraw3();draw5();redraw4();
 }
 $('#spread').addEventListener('change',e=>{
   SPREAD=e.target.checked?5:1;
   s2.ang=(aR()+aV())/2;$('#asl').value=s2.ang;
-  draw1();draw1g();draw2();redraw3();
+  s5.ang=s2.ang;$('#a5').value=s5.ang;
+  draw1();draw1g();draw2();redraw3();draw5();redraw4();
 });
 let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(layout,120);});
 s2.ang=(aR()+aV())/2;$('#asl').value=Math.round(s2.ang*10)/10;
+s5.ang=s2.ang;$('#a5').value=Math.round(s5.ang*10)/10;s4.yaw=(100-+$('#yaw').value)/100*90;
 layout();
 })();
 </script>
